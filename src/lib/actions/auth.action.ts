@@ -2,7 +2,10 @@
 
 import { cookies } from "next/headers";
 
-export const login = async (payload: any) => {
+export const login = async (payload: {
+  username: string;
+  password: string;
+}) => {
   try {
     const res = await fetch("https://dummyjson.com/auth/login", {
       method: "POST",
@@ -16,21 +19,23 @@ export const login = async (payload: any) => {
     if (res.ok) {
       const json = await res.json();
       console.log(json, "json");
-      let newAccessToken = {
+
+      const newAccessToken = {
         token: json.accessToken,
-        refreshToken: json?.refreshToken,
+        refreshToken: json.refreshToken,
       };
-      console.log("newAccessToken", newAccessToken);
-      // const cookieResponse = NextResponse.next();
-      // cookieResponse.headers.set('Set-Cookie', `accessToken=${newAccessToken}; Path=/; HttpOnly`);
-      // const  cook = cookies()
-      cookies().set("userToken", `${JSON.stringify(newAccessToken)}`, {
+
+      cookies().set("userToken", JSON.stringify(json), {
         path: "/",
         httpOnly: true,
+        secure: process.env.NODE_ENV === "production", // Secure in production
+        sameSite: "strict", // Prevent CSRF attacks
       });
+
       return json;
     }
   } catch (error) {
+    console.error("Login error:", error);
     return false;
   }
 };

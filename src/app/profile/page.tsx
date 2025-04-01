@@ -8,17 +8,23 @@ export default async function ProfilePage() {
   // - if you get a type error: URL is invalid
   // make sure you add the absolute url, relative paths are only available in client side, because it's relative to the document.
   // but theres no document in the server.
+  const userToken = cookies().get("userToken");
+  const parsedToken = userToken
+    ? JSON.parse(decodeURIComponent(userToken.value))
+    : null;
   const res = await fetch("https://dummyjson.com/auth/me", {
     headers: {
       // you should send the cookies manually with the requests that are sent from server side, so that the cookies reaches the middleware.ts.
       // put in mind that this makes this route dynamic, meaning that next will pre-render it on each request.
       // because we are using a function from next/headers
-      Cookie: cookies().toString(),
+      Authorization: `Bearer ${parsedToken?.accessToken}`,
     },
+    credentials: "include",
+    cache: "no-store", // to prevent caching
   });
 
   const json = await res.json();
-
+  console.log("json", json);
   return (
     <div>
       <Link href="/">go Home</Link>
